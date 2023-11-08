@@ -2,7 +2,7 @@
 
 DOCKER_ARGS=""
 USER=1000
-
+ENV_FILE=/etc/osg/ospool-ep.cfg
 # explicitly true:
 # y(es), t(rue), 1, on; uppercase or lowercase
 is_true () {
@@ -44,9 +44,7 @@ if [ -n "$WORK_TEMP_DIR" ] && ! test -d $WORK_TEMP_DIR; then
   exit_with_error "WORK_TEMP_DIR must be empty or a directory"
 fi
 
-if test -d $WORK_TEMP_DIR; then
-
-
+if [ -n "$WORK_TEMP_DIR" ] && test -d $WORK_TEMP_DIR; then
   add_cmd_arg "-v ${WORK_TEMP_DIR}:/pilot"
 fi
 
@@ -71,12 +69,12 @@ if is_true $PROVIDE_NVIDIA_GPU; then
 fi
 
 # Limit docker's CPU usage if the NUM_CPUS condor config param is set
-if [ -n $NUM_CPUS ]; then
+if [ -n "$NUM_CPUS" ]; then
   add_cmd_arg "--cpus=$NUM_CPUS"
 fi
 
 # Limit docker's memory usage if the MEMORY condor config param is set
-if [ -n $MEMORY ]; then
+if [ -n "$MEMORY" ]; then
   add_cmd_arg "--memory=$(( ($MEMORY + 100) * 1024 * 1024 ))"
 fi
 
@@ -85,15 +83,12 @@ fi
 TIMEOUT="$(($ACCEPT_JOBS_FOR_HOURS + $RETIREMENT_HOURS))h"
 
 # TODO passing the whole source env file into docker pollutes the environment to some extent
-FULL_CMD="
 timeout $TIMEOUT \
-docker run -it --rm --user $USER --name osg-worker \
+  docker run -it --rm --user $USER --name osg-worker \
     --pull=always            \
     --security-opt seccomp=unconfined \
     --security-opt systempaths=unconfined \
     --security-opt no-new-privileges \
+    --env-file $ENV_FILE \
     $DOCKER_ARGS \
     opensciencegrid/osgvo-docker-pilot:3.6-release
-"
-
-echo $FULL_CMD
