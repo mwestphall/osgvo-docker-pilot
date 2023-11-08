@@ -1,0 +1,13 @@
+[Unit]
+Description=OSPool Backfill Container Service
+
+[Service]
+Type=simple
+Restart=on-success
+ExecStart=/usr/sbin/start_ospool_ep_container.sh
+ExecStop=/usr/bin/docker stop osg-worker
+
+EnvironmentFile=/etc/osg/ospool-ep.cfg
+
+[Install]
+WantedBy=multi-user.target
