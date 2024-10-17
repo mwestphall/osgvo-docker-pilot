@@ -79,7 +79,7 @@ runs:
     run: |
       mkdir -p /tmp/${{ inputs.registry }}/digests
       digest="${{ steps.upload-image.outputs.digest }}"
-      touch "/tmp/${{ inputs.registry }}/digests/${digest#sha256:}"         
+      touch "/tmp/${{ inputs.registry }}/digests/${digest#sha256:}"
 
   - name: Upload digest
     uses: actions/upload-artifact@v4
@@ -93,7 +93,12 @@ runs:
     shell: bash
     run: |
       mkdir -p /tmp/${{ inputs.registry }}/tags/
-      echo ${{ steps.upload-image.outputs.image-list }} > /tmp/${{ inputs.registry }}/tags/${{ inputs.base_tag }}-${{ steps.slash-escape.outputs.platform }}
+      # In harbor, upload to osg-htc instead of opensciencegrid
+      TAGS=${{ steps.upload-image.outputs.image-list }}
+      if [[ ${{ inputs.registry }} == "hub.opensciencegrid.org" ]]; then
+        TAGS=$(echo $TAGS | sed 's/\/opensciencegrid/\/osg-htc/g')
+      fi
+      echo $TAGS > /tmp/${{ inputs.registry }}/tags/${{ inputs.base_tag }}-${{ steps.slash-escape.outputs.platform }}
     
   - name: Upload tags
     uses: actions/upload-artifact@v4
