@@ -163,18 +163,16 @@ function test_docker_HAS_SINGULARITY {
 function test_singularity_startup {
     print_test_header "Testing container startup"
 
-    logfile=$(wait_for_output 1200 find $PILOT_DIR -name StartLog -size +1)
-    if [[ -z $logfile ]]; then
-        cat $SINGULARITY_OUTPUT
-        return 1
-    fi
+    # Wait for the startd to be ready
+    # N.B. we have condor dump the eval'ed STARTD_State expression
+    # because `condor_who -wait` always returns 0
+    startd_ready=$(condor_who -log "$CONDOR_LOGDIR" \
+                              -wait:120 'IsReady && STARTD_State =?= "Ready"' \
+                              -af 'STARTD_State =?= "Ready"')
 
-    wait_for_output 60 \
-                    grep \
-                    -- \
-                    'Changing activity: Benchmarking -> Idle' \
-                    $logfile \
-        || (tail -n 400 $logfile && return 1)
+    if [[ $startd_ready != "true" ]]; then
+        cat "$CONDOR_LOGDIR/StartLog"
+    fi
 }
 
 function test_singularity_HAS_SINGULARITY {
