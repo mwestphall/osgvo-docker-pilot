@@ -166,12 +166,12 @@ function test_singularity_startup {
     # Wait for the startd to be ready
     # N.B. we have condor dump the eval'ed STARTD_State expression
     # because `condor_who -wait` always returns 0
-    startd_ready=$(condor_who -log "$CONDOR_LOGDIR" \
+    startd_ready=$(run_inside_backfill_container condor_who -log "$CONDOR_LOGDIR" \
                               -wait:120 'IsReady && STARTD_State =?= "Ready"' \
                               -af 'STARTD_State =?= "Ready"')
 
     if [[ $startd_ready != "true" ]]; then
-        cat "$CONDOR_LOGDIR/StartLog"
+        run_inside_backfill_container tail -n 400 "$CONDOR_LOGDIR/StartLog"
     fi
 }
 
