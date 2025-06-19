@@ -34,7 +34,7 @@ function start_singularity_backfill {
           instance start \
             -B /cvmfs \
             -B $PILOT_DIR:/pilot \
-            -cip \
+            -ci \
             docker-daemon:$CONTAINER_IMAGE \
             backfill \
         > $SINGULARITY_OUTPUT 2>&1 &"
