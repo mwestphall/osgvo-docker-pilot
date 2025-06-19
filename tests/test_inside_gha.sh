@@ -36,8 +36,7 @@ function start_singularity_backfill {
             -B $PILOT_DIR:/pilot \
             -ci \
             docker-daemon:$CONTAINER_IMAGE \
-            backfill \
-        > $SINGULARITY_OUTPUT 2>&1 &"
+            backfill &"
 }
 
 function start_docker_backfill {
