@@ -31,11 +31,13 @@ function start_singularity_backfill {
        APPTAINERENV_GLIDEIN_ResourceName=None \
        APPTAINERENV_GLIDEIN_Start_Extra=True \
        $singularity \
-          run \
+          instance start \
             -B /cvmfs \
             -B $PILOT_DIR:/pilot \
             -cip \
-            docker-daemon:$CONTAINER_IMAGE > $SINGULARITY_OUTPUT 2>&1 &"
+            docker-daemon:$CONTAINER_IMAGE \
+            backfill \
+        > $SINGULARITY_OUTPUT 2>&1 &"
 }
 
 function start_docker_backfill {
@@ -50,6 +52,15 @@ function run_inside_backfill_container {
         return $ABORT_CODE
     else
         docker exec backfill "$@"
+    fi
+}
+
+function run_inside_backfill_apptainer {
+    singularity=/cvmfs/oasis.opensciencegrid.org/mis/apptainer/bin/apptainer
+    if ! $singularity exec backfill /bin/true &>/dev/null; then
+        return $ABORT_CODE
+    else
+        $singularity exec backfill "$@"
     fi
 }
 
@@ -166,12 +177,12 @@ function test_singularity_startup {
     # Wait for the startd to be ready
     # N.B. we have condor dump the eval'ed STARTD_State expression
     # because `condor_who -wait` always returns 0
-    startd_ready=$(run_inside_backfill_container condor_who -log "$CONDOR_LOGDIR" \
+    startd_ready=$(run_inside_backfill_apptainer condor_who -log "$CONDOR_LOGDIR" \
                               -wait:120 'IsReady && STARTD_State =?= "Ready"' \
                               -af 'STARTD_State =?= "Ready"')
 
     if [[ $startd_ready != "true" ]]; then
-        run_inside_backfill_container tail -n 400 "$CONDOR_LOGDIR/StartLog"
+        run_inside_backfill_apptainer tail -n 400 "$CONDOR_LOGDIR/StartLog"
     fi
 }
 
