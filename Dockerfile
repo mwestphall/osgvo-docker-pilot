@@ -22,6 +22,7 @@ RUN useradd osg \
         yum -y install apptainer; \
     fi \
  && yum -y install \
+        pelican-debug \
         osg-wn-client \
         attr \
         'git >= 2' \
@@ -37,15 +38,9 @@ RUN useradd osg \
 # Pull HTCondor from the proper repo. For "release" we need to use
 # osg-upcoming-testing to meet the patch tuesday requirements.
 RUN if [[ $BASE_YUM_REPO = release ]]; then \
-      yum -y --enablerepo=osg-upcoming-testing install condor && \
-      if /usr/local/bin/pkg-cmp-gt.sh condor 23.10.26; then \
-        yum -y --enablerepo=osg-upcoming-testing swap pelican pelican-debug; \
-      fi; \
+      yum -y --enablerepo=osg-upcoming-testing install condor; \
     else \
-      yum -y install condor && \
-      if /usr/local/bin/pkg-cmp-gt.sh condor 23.10.26; then \
-        yum -y swap pelican pelican-debug; \
-      fi; \
+      yum -y install condor; \
     fi
 
 
